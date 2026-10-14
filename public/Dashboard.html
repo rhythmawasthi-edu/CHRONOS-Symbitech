@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHRONOS · Case Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --paper: #E9E4D8;
+    --sheet: #F1EDE4;
+    --field: #F7F4EE;
+    --carbon: #141414;
+    --amber: #C8892B;
+    --red: #9B2D20;
+    --teal: #3E6B6A;
+    --muted: #57524A;
+    --rule: rgba(20, 20, 20, 0.16);
+    --head: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    --type: "Courier Prime", "Courier New", Courier, monospace;
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .07 0 0 0 0 .05 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { font-size: 100%; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background-color: var(--paper);
+    background-image: var(--grain), repeating-linear-gradient(to bottom, transparent 0 31px, rgba(20, 20, 20, 0.045) 31px 32px);
+    color: var(--carbon);
+    font-family: var(--type);
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 3px solid var(--carbon); outline-offset: 3px; }
+  button, input { font: inherit; color: inherit; }
+  .vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: square; stroke-linejoin: miter; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 24px 56px; }
+
+  /* Masthead */
+  .mast { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 18px 24px;
+    padding-bottom: 16px; border-bottom: 4px double var(--carbon); margin-bottom: 28px; }
+  .mast-id { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .emblem { width: 56px; height: 56px; stroke-width: 1.3; padding: 6px; border: 1.5px solid var(--carbon); background: var(--sheet); }
+  .kicker { margin: 0; font: 500 0.875rem/1.3 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); }
+  h1 { margin: 4px 0 0; font: 700 clamp(2rem, 4.2vw, 3rem)/0.95 var(--head); text-transform: uppercase; letter-spacing: 0.01em; }
+  .mast-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px;
+    border: 2px solid var(--carbon); border-radius: 2px; background: var(--carbon); color: var(--sheet);
+    font: 600 1rem/1 var(--head); letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #2c2a27; border-color: #2c2a27; }
+  .btn:active { transform: translateY(1px); }
+  .btn.line { background: transparent; color: var(--carbon); border-color: var(--carbon); }
+  .btn.line:hover { background: rgba(20, 20, 20, 0.07); }
+  .btn.danger { background: transparent; color: var(--red); border-color: var(--red); }
+  .btn.danger:hover { background: rgba(155, 45, 32, 0.08); }
+  .btn.small { min-height: 40px; padding: 0 12px; font-size: 0.9rem; }
+
+  /* Intake slip */
+  form.entry { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto; gap: 14px; align-items: end;
+    background: var(--sheet); border: 1.5px solid var(--carbon); border-top: 6px solid var(--carbon); padding: 16px 18px 18px; margin-bottom: 10px; }
+  .slip-head { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    border-bottom: 1px dashed var(--rule); padding-bottom: 8px; }
+  .slip-head h2 { margin: 0; font: 700 1.15rem/1.2 var(--head); text-transform: uppercase; letter-spacing: 0.06em; }
+  .editnote { margin: 0; font: 600 0.9rem/1.3 var(--mono); color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; }
+  label, .lab { display: block; margin-bottom: 6px; font: 600 0.95rem/1.2 var(--head); letter-spacing: 0.06em; text-transform: uppercase; }
+  input { width: 100%; min-height: 44px; padding: 8px 12px; background: var(--field); color: var(--carbon);
+    border: 1.5px solid var(--carbon); border-bottom-width: 3px; border-radius: 0; font-family: var(--mono); font-size: 1rem;
+    font-variant-numeric: tabular-nums; }
+  input#fName { font-family: var(--type); font-weight: 700; font-size: 1.05rem; }
+  input::placeholder { color: #6E685D; }
+  .form-actions { display: flex; gap: 8px; }
+  .msg { color: var(--red); font-weight: 700; min-height: 1.5em; margin: 0 0 8px; }
+
+  .rule { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 26px; color: var(--muted); font-size: 1rem; }
+  .rule b { color: var(--carbon); font-family: var(--head); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.95rem; }
+  .rule input { display: inline-block; width: 76px; min-height: 40px; padding: 4px 8px; text-align: right; border-bottom-width: 2px; }
+
+  /* Toolbar */
+  .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 20px; margin-bottom: 14px; }
+  .search { flex: 1 1 280px; max-width: 420px; }
+  .field-ic { position: relative; }
+  .field-ic .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .field-ic input { padding-left: 40px; font-family: var(--type); }
+  .count { margin: 0; font: 500 0.95rem/1.3 var(--mono); color: var(--muted); letter-spacing: 0.04em; }
+
+  /* Ledger */
+  .tab { display: inline-block; background: var(--carbon); color: var(--sheet); font: 600 0.9rem/1 var(--head); letter-spacing: 0.14em;
+    text-transform: uppercase; padding: 9px 14px 8px; }
+  .ledger { position: relative; background: var(--sheet); border: 1.5px solid var(--carbon); margin-right: 6px; }
+  .ledger::before { content: ""; position: absolute; inset: 6px -7px -7px 6px; border: 1.5px solid var(--carbon); background: #DCD6C8; z-index: -1; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  thead th { position: sticky; top: 0; z-index: 3; background: var(--carbon); color: var(--sheet); padding: 0; text-align: left; font-weight: 600; }
+  th.c-rank { width: 76px; } th.c-time { width: 116px; } th.c-wrong, th.c-give { width: 86px; }
+  th.c-pen { width: 124px; } th.c-total { width: 112px; } th.acts-col { width: 196px; }
+  .sort { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 46px; padding: 0 14px; background: transparent; border: 0;
+    color: inherit; cursor: pointer; font: 600 0.9rem/1 var(--head); letter-spacing: 0.1em; text-transform: uppercase; }
+  th.num .sort { justify-content: flex-end; }
+  .sort .ic { width: 14px; height: 14px; opacity: 0.5; }
+  th.sorted .sort { color: var(--amber); }
+  th.sorted .sort .ic { opacity: 1; }
+  .sort:hover { background: rgba(241, 237, 228, 0.08); }
+  .sort:focus-visible { outline: 3px solid var(--amber); outline-offset: -4px; }
+
+  tbody td { padding: 14px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:not(.empty-row):hover td { background-color: rgba(20, 20, 20, 0.035); }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; font-size: 1.02rem; }
+  td.zero { color: var(--muted); }
+  .cnt { color: var(--muted); font-size: 0.9em; }
+  td.total { font-weight: 600; font-size: 1.12rem; }
+  td.rank { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 1.4rem; font-weight: 500; border-right: 3px double rgba(155, 45, 32, 0.55); }
+  tr.r1 td.rank { color: var(--red); font-weight: 600; }
+  td.team { min-width: 0; }
+  .nm { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--type); font-weight: 700; font-size: 1.18rem; line-height: 1.3; }
+  .nm[role="button"] { cursor: pointer; }
+  .nm.open { white-space: normal; overflow-wrap: anywhere; }
+  .marks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 7px; }
+  .marks:empty { display: none; }
+  .stamp { display: inline-block; padding: 6px 10px 5px; font: 700 0.8rem/1 var(--head); letter-spacing: 0.18em; text-transform: uppercase;
+    border: 2px solid currentColor; border-radius: 2px; outline: 1px solid currentColor; outline-offset: -5px; transform: rotate(-2.5deg); }
+  .stamp.s1 { color: var(--red); }
+  .stamp.s2 { color: var(--carbon); border-color: var(--amber); outline-color: var(--amber); transform: rotate(1.5deg); }
+  .stamp.s3 { color: var(--teal); transform: rotate(-1deg); }
+  .you { display: inline-block; background: var(--carbon); color: var(--amber); font: 600 0.82rem/1 var(--mono); letter-spacing: 0.14em; padding: 5px 8px; transform: rotate(-3deg); }
+  tr.is-you td { background-color: rgba(200, 137, 43, 0.14); }
+  tr.is-you td:first-child { box-shadow: inset 7px 0 0 var(--amber); }
+  .acts { display: flex; gap: 6px; justify-content: flex-end; }
+
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 44px 20px 48px; }
+  .empty .ic { width: 52px; height: 52px; stroke-width: 1.3; color: var(--muted); }
+  .empty-title { margin: 0; font: 700 1.5rem/1.2 var(--head); text-transform: uppercase; letter-spacing: 0.04em; }
+  .empty-note { margin: 0 0 8px; color: var(--muted); max-width: 36ch; }
+
+  footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 34px;
+    padding-top: 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 1rem; }
+  footer p { margin: 0; }
+
+  /* Admin-only controls: hidden from the public here, and blocked by the database rules too */
+  body:not(.is-admin) .admin-only { display: none !important; }
+  .rule input:disabled { background: transparent; border-color: transparent; border-bottom-color: var(--rule); color: var(--carbon);
+    -webkit-text-fill-color: var(--carbon); opacity: 1; -moz-appearance: textfield; appearance: textfield; }
+  .rule input:disabled::-webkit-inner-spin-button, .rule input:disabled::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .status { margin: 0 0 18px; padding: 10px 14px; border: 1.5px solid var(--red); border-left-width: 6px; background: var(--sheet);
+    color: var(--red); font: 600 0.95rem/1.4 var(--mono); }
+
+  /* Admin sign-in dialog */
+  dialog.login { width: min(420px, calc(100vw - 32px)); padding: 18px 20px 20px; background: var(--sheet); color: var(--carbon);
+    border: 1.5px solid var(--carbon); border-top: 6px solid var(--carbon); border-radius: 0; font-family: var(--type); }
+  dialog.login::backdrop { background: rgba(20, 20, 20, 0.55); }
+  dialog.login h2 { margin: 0 0 4px; font: 700 1.2rem/1.2 var(--head); text-transform: uppercase; letter-spacing: 0.06em; }
+  dialog.login .hint { margin: 0 0 14px; color: var(--muted); font-size: 0.95rem; }
+  dialog.login .fld { margin-bottom: 14px; }
+  dialog.login .msg { margin: 0 0 10px; }
+  dialog.login .dlg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+  dialog.login .btn:disabled { opacity: 0.6; cursor: wait; }
+
+  /* Presentation mode */
+  body.present form.entry, body.present .rule, body.present .msg, body.present .acts-col, body.present .acts-cell,
+  body.present .toolbar, body.present .navlink { display: none; }
+  body.present { font-size: 1.375rem; }
+  body.present tbody td { padding: 20px 18px; }
+  body.present .nm { font-size: 1.7rem; }
+  body.present td.rank { font-size: 1.9rem; }
+  body.present td.num { font-size: 1.3rem; }
+
+  /* Motion */
+  #rows.intro td { animation: typein 0.38s steps(12, end) both; animation-delay: calc(min(var(--i), 14) * 45ms); }
+  @keyframes typein { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  tr.thunk td { animation: ink 1.4s ease-out 0.2s both; }
+  tr.thunk .you { animation: thunk 0.32s cubic-bezier(0.25, 0.8, 0.3, 1) 0.25s both; }
+  @keyframes thunk { 0% { opacity: 0; transform: scale(2.2) rotate(-10deg); } 75%, 100% { opacity: 1; transform: scale(1) rotate(-3deg); } }
+  @keyframes ink { from { background-color: rgba(200, 137, 43, 0.42); } to { background-color: rgba(200, 137, 43, 0.14); } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  /* Mid widths: tighter columns, icon-only row actions */
+  @media (max-width: 1000px) {
+    th.c-rank { width: 60px; } th.c-time { width: 98px; } th.c-wrong, th.c-give { width: 70px; }
+    th.c-pen { width: 108px; } th.c-total { width: 98px; } th.acts-col { width: 108px; }
+    .acts .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .acts .btn { padding: 0 10px; min-width: 44px; min-height: 44px; }
+    tbody td { padding: 12px 10px; }
+  }
+
+  /* Narrow: each record becomes a stacked card */
+  @media (max-width: 860px) {
+    .wrap { padding: 20px 16px 44px; }
+    .mast-side { align-items: stretch; width: 100%; }
+    .nav { display: grid; grid-template-columns: 1fr 1fr; }
+    .nav #presentBtn, .nav #adminBtn { grid-column: 1 / -1; }
+    form.entry { grid-template-columns: 1fr 1fr; }
+    form.entry > div:first-of-type, .f-time, .form-actions { grid-column: 1 / -1; }
+    .form-actions .btn { flex: 1; }
+    .search { max-width: none; }
+    .ledger { margin-right: 0; }
+    .ledger::before { display: none; }
+    .ledger table, .ledger tbody, .ledger thead { display: block; }
+    .ledger thead tr { display: flex; flex-wrap: wrap; }
+    .ledger thead th { position: static; width: auto; flex: 1 1 auto; }
+    th.num .sort, .sort { justify-content: center; padding: 0 10px; min-height: 44px; }
+    .ledger th.acts-col { display: none; }
+    .ledger tbody tr { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1.5px solid var(--carbon); padding: 6px 0 8px; }
+    .ledger tbody tr:last-child { border-bottom: 0; }
+    .ledger tbody td { border-bottom: 0; padding: 8px 12px; }
+    td.rank { grid-column: 1 / 2; border-right: 0; padding-right: 0 !important; align-self: start; font-size: 1.3rem; }
+    td.team { grid-column: 2 / -1; padding-left: 4px !important; }
+    td.num { grid-column: span 2; text-align: left; }
+    td.t-pen, td.total { grid-column: span 3; }
+    td.num::before { content: attr(data-label); display: block; margin-bottom: 2px; font: 600 0.78rem/1.2 var(--head); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    td.acts-cell { grid-column: 1 / -1; }
+    .acts { justify-content: stretch; }
+    .acts .btn { flex: 1; min-height: 44px; }
+    .acts .btn span { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+    tr.is-you { box-shadow: inset 7px 0 0 var(--amber); background-color: rgba(200, 137, 43, 0.14); }
+    tr.is-you td:first-child { box-shadow: none; }
+    tr.is-you td { background-color: transparent; }
+    tr.thunk td { animation: none; }
+    tr.empty-row { display: block !important; }
+    tr.empty-row td { display: block; }
+    footer .btn { width: 100%; }
+    body.present { font-size: 1.125rem; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-emblem" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.5l3.2 2M12 1.5v2.2M12 20.3v2.2M1.5 12h2.2M20.3 12h2.2"/></symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24"><path d="M3 4.5h18v12H3zM12 16.5V20M7.5 20h9"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4.2L19.5 8.7l-4.2-4.2L4 15.8zM13.4 6.4l4.2 4.2"/></symbol>
+    <symbol id="i-remove" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4h5v3M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M2.5 6h6.5l2 2.2h10.5V19h-19zM2.5 11h19"/></symbol>
+    <symbol id="i-sort" viewBox="0 0 24 24"><path d="M8 9.5l4-4 4 4M8 14.5l4 4 4-4"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M6.5 14.5l5.5-5.5 5.5 5.5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M6.5 9.5l5.5 5.5 5.5-5.5"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5zM15 3v4h4M8.5 12h7M8.5 15.5h7"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M5.5 10.5h13V20h-13zM8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="mast-id">
+      <svg class="ic emblem" aria-hidden="true"><use href="#i-emblem"/></svg>
+      <div>
+        <h1>Chronos Case Records</h1>
+      </div>
+    </div>
+    <div class="mast-side">
+      <nav class="nav" aria-label="Board">
+        <button class="btn line" id="presentBtn" type="button" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-screen"/></svg><span id="presentLabel">Presentation mode</span></button>
+        <button class="btn line navlink" id="adminBtn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><span id="adminLabel">Admin sign in</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <p class="status" id="status" role="status" hidden></p>
+
+  <main>
+    <form class="entry admin-only" id="entryForm" autocomplete="off">
+      <div class="slip-head">
+        <h2>Log a closed case</h2>
+        <p class="editnote" id="editNote" hidden></p>
+      </div>
+      <div><label for="fName">Team name</label><input id="fName" type="text" maxlength="30" required></div>
+      <div class="f-time"><label for="fTime">Stopwatch (mm:ss)</label><input id="fTime" type="text" inputmode="numeric" placeholder="48:30" required></div>
+      <div><label for="fWrong">Wrong verdicts</label><input id="fWrong" type="number" min="0" value="0" required></div>
+      <div><label for="fGive">Codes given</label><input id="fGive" type="number" min="0" max="5" value="0" required></div>
+      <div class="form-actions">
+        <button class="btn line" type="button" id="cancelEdit" hidden>Cancel</button>
+        <button class="btn" type="submit" id="addBtn">Add team</button>
+      </div>
+    </form>
+    <div class="msg admin-only" id="msg" role="alert"></div>
+    <p class="rule">
+      <b>Case note:</b>
+      <span>each wrong verdict or given-away code adds</span>
+      <span><input id="penalty" type="number" min="0" step="0.5" value="2" aria-label="Penalty minutes" disabled> minutes.</span>
+      <span>Ranking uses total time. Ties go to fewer wrong verdicts, then faster stopwatch time.</span>
+    </p>
+
+    <div class="toolbar">
+      <div class="search">
+        <label class="lab" for="search">Find a team</label>
+        <div class="field-ic"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><input id="search" type="search" placeholder="Name on file  ( / )" autocomplete="off"></div>
+      </div>
+      <p class="count" id="count" aria-live="polite"></p>
+    </div>
+
+    <span class="tab">Case file index</span>
+    <div class="ledger">
+      <table>
+        <caption class="vh">Team standings, ranked by total time</caption>
+        <thead>
+          <tr>
+            <th class="c-rank" data-key="rank" aria-sort="ascending"><button class="sort" type="button" data-sort="rank">No.<svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button></th>
+            <th class="c-team" data-key="name" aria-sort="none"><button class="sort" type="button" data-sort="name">Team<svg class="ic" aria-hidden="true"><use href="#i-sort"/></svg></button></th>
+            <th class="c-time num" data-key="time" aria-sort="none"><button class="sort" type="button" data-sort="time">Stopwatch<svg class="ic" aria-hidden="true"><use href="#i-sort"/></svg></button></th>
+            <th class="c-wrong num" data-key="wrong" aria-sort="none"><button class="sort" type="button" data-sort="wrong" title="Wrong verdicts">Wrong<svg class="ic" aria-hidden="true"><use href="#i-sort"/></svg></button></th>
+            <th class="c-give num" data-key="give" aria-sort="none"><button class="sort" type="button" data-sort="give" title="Codes given away">Codes<svg class="ic" aria-hidden="true"><use href="#i-sort"/></svg></button></th>
+            <th class="c-pen num" data-key="penalty" aria-sort="none"><button class="sort" type="button" data-sort="penalty">Penalty<svg class="ic" aria-hidden="true"><use href="#i-sort"/></svg></button></th>
+            <th class="c-total num" data-key="total" aria-sort="none"><button class="sort" type="button" data-sort="total">Total<svg class="ic" aria-hidden="true"><use href="#i-sort"/></svg></button></th>
+            <th class="acts-col admin-only"><span class="vh">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>
+    <p>Scores are saved online and update live on every screen. Press Esc to leave presentation mode.</p>
+    <button class="btn danger small admin-only" id="clearBtn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-remove"/></svg>Clear all teams</button>
+  </footer>
+</div>
+
+<dialog class="login" id="loginDlg" aria-labelledby="loginTitle">
+  <form id="loginForm">
+    <h2 id="loginTitle">Admin sign in</h2>
+    <p class="hint">Only admins can add, edit or remove teams. Everyone else can view the board.</p>
+    <div class="msg" id="loginMsg" role="alert"></div>
+    <div class="fld"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" required></div>
+    <div class="fld"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+    <div class="dlg-actions">
+      <button class="btn line" type="button" id="loginCancel">Cancel</button>
+      <button class="btn" type="submit" id="loginGo">Sign in</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ---------- Supabase connection: fill in these two values ---------- */
+// Supabase dashboard > Project Settings > API. Use the "anon / public" key ONLY.
+// Never put the service_role key in this file: anyone can read it by viewing the page source.
+const SUPABASE_URL = "https://qcxetbvvshobdbvsyqqd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjeGV0YnZ2c2hvYmRidnN5cXFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5NDcxNzgsImV4cCI6MjEwNzUyMzE3OH0.Bx6WGbtWm0lxkSdjhUkmdPBoOh3_gq7TxaETv-bHL7s";
+
+const $ = (id) => document.getElementById(id);
+const configured = !/YOUR-/i.test(SUPABASE_URL + SUPABASE_ANON_KEY);
+const sb = configured && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+/* Same shape the page always used; now filled from the database instead of localStorage */
+let data = { penalty: 2, teams: [] };
+let editing = null;
+let isAdmin = false;                       // display only: the database rules decide what is really allowed
+let loadState = "loading", loadMsg = "";   // "loading" | "ok" | "error"
+let lastSig = "";
+
+const fromRow = (r) => ({ id: r.id, name: r.name, time: r.time_sec, wrong: r.wrong, give: r.give });
+function dbErr(e) {
+  const m = (e && e.message) || "Something went wrong.";
+  if (e && e.code === "23505") return "That team is already on the board. Use Edit to change it.";
+  if ((e && e.code === "42501") || /row-level security|permission denied/i.test(m)) return "Not allowed. Sign in as admin first.";
+  if (/jwt/i.test(m)) return "Your admin session expired. Sign out and sign in again.";
+  return m;
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function parseTime(s) {
+  s = s.trim();
+  const m = s.match(/^(\d{1,3})(?::([0-5]?\d))?$/);
+  if (!m) return null;
+  return (parseInt(m[1], 10) * 60 + (m[2] ? parseInt(m[2], 10) : 0));
+}
+function fmt(sec) {
+  sec = Math.round(sec);
+  return String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0");
+}
+const penaltySec = (t) => (t.wrong + t.give) * data.penalty * 60;
+const total = (t) => t.time + penaltySec(t);
+
+/* ---------- Display-only state (never saved with the scores) ---------- */
+const STAMPS = ["Exemplary", "Distinguished", "Commended"];
+let view = { key: "rank", dir: 1, q: "" };   // view sort/filter only; official rank never changes
+let currentId = null, thunkId = null, scrollPending = false, firstRender = true;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const pad2 = (n) => String(n).padStart(2, "0");
+
+function updateSortHeaders() {
+  document.querySelectorAll(".ledger th[data-key]").forEach(th => {
+    const on = th.dataset.key === view.key;
+    th.setAttribute("aria-sort", on ? (view.dir === 1 ? "ascending" : "descending") : "none");
+    th.classList.toggle("sorted", on);
+    th.querySelector("use").setAttribute("href", on ? (view.dir === 1 ? "#i-up" : "#i-down") : "#i-sort");
+  });
+}
+
+function emptyRow(title, note, btnLabel, attr) {
+  return `<tr class="empty-row"><td colspan="8"><div class="empty">
+    <svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>
+    <p class="empty-title">${title}</p><p class="empty-note">${note}</p>
+    ${btnLabel ? `<button class="btn" type="button" ${attr}>${btnLabel}</button>` : ""}</div></td></tr>`;
+}
+
+function markTruncated() {
+  document.querySelectorAll("#rows .nm").forEach(el => {
+    const cut = el.classList.contains("open") || el.scrollWidth > el.clientWidth + 1;
+    if (cut) { el.tabIndex = 0; el.setAttribute("role", "button"); el.setAttribute("aria-expanded", String(el.classList.contains("open"))); }
+    else { el.removeAttribute("tabindex"); el.removeAttribute("role"); el.removeAttribute("aria-expanded"); }
+  });
+}
+
+function render() {
+  if (document.activeElement !== $("penalty")) $("penalty").value = data.penalty;
+  if (loadState !== "ok") {
+    const failed = loadState === "error";
+    $("count").textContent = failed ? "Records unavailable" : "Opening the case files…";
+    $("rows").innerHTML = failed
+      ? emptyRow("Can't reach the records", esc(loadMsg), "Try again", "data-retry")
+      : `<tr class="empty-row"><td colspan="8"><div class="empty"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><p class="empty-title">Opening the case files…</p></div></td></tr>`;
+    return;
+  }
+  const doIntro = firstRender; firstRender = false;
+  // Official ranking: identical to the original sort
+  const sorted = data.teams.slice().sort((a, b) => total(a) - total(b) || a.wrong - b.wrong || a.time - b.time);
+  const rankOf = new Map(sorted.map((t, i) => [t.id, i + 1]));
+  updateSortHeaders();
+
+  const q = view.q.trim().toLowerCase();
+  const list = q ? sorted.filter(t => t.name.toLowerCase().includes(q)) : sorted.slice();
+  if (view.key !== "rank" || view.dir !== 1) {
+    const by = {
+      rank: (a, b) => rankOf.get(a.id) - rankOf.get(b.id),
+      name: (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      time: (a, b) => a.time - b.time,
+      wrong: (a, b) => a.wrong - b.wrong,
+      give: (a, b) => a.give - b.give,
+      penalty: (a, b) => penaltySec(a) - penaltySec(b),
+      total: (a, b) => total(a) - total(b)
+    }[view.key];
+    list.sort((a, b) => view.dir * by(a, b) || rankOf.get(a.id) - rankOf.get(b.id));
+  }
+
+  $("count").textContent = !sorted.length ? "0 files on record"
+    : q ? `Showing ${list.length} of ${sorted.length} files` : `${sorted.length} file${sorted.length === 1 ? "" : "s"} on record`;
+
+  if (!sorted.length) {
+    $("rows").innerHTML = emptyRow("No closed cases on file yet", "Results land here once a team's stopwatch time is logged.");
+    return;
+  }
+  if (!list.length) {
+    $("rows").innerHTML = emptyRow(`No team on file matches “${esc(view.q.trim())}”`, "Check the spelling, or clear the search to see every record.", "Clear search", "data-clear");
+    return;
+  }
+
+  $("rows").innerHTML = list.map((t, i) => {
+    const r = rankOf.get(t.id), pen = penaltySec(t), n = t.wrong + t.give, you = t.id === currentId;
+    return `<tr class="r${r}${you ? " is-you" : ""}${t.id === thunkId ? " thunk" : ""}" style="--i:${i}" data-id="${t.id}">
+      <td class="rank"><span class="vh">Rank </span>${pad2(r)}</td>
+      <td class="team"><span class="nm" title="${esc(t.name)}">${esc(t.name)}</span><div class="marks">${you ? '<span class="you">YOU</span>' : ""}${r <= 3 ? `<span class="stamp s${r}">${STAMPS[r - 1]}</span>` : ""}</div></td>
+      <td class="num t-time" data-label="Stopwatch">${fmt(t.time)}</td>
+      <td class="num t-wrong${t.wrong ? "" : " zero"}" data-label="Wrong verdicts">${t.wrong}</td>
+      <td class="num t-give${t.give ? "" : " zero"}" data-label="Codes given">${t.give}</td>
+      <td class="num t-pen${pen ? "" : " zero"}" data-label="Penalty">${pen ? "+" + fmt(pen) + ' <span class="cnt">(' + n + ")</span>" : "0"}</td>
+      <td class="num total" data-label="Total">${fmt(total(t))}</td>
+      <td class="acts-cell admin-only">${isAdmin ? `<div class="acts"><button class="btn line small" data-edit="${t.id}" type="button" aria-label="Edit ${esc(t.name)}"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg><span>Edit</span></button><button class="btn line small" data-del="${t.id}" type="button" aria-label="Remove ${esc(t.name)}"><svg class="ic" aria-hidden="true"><use href="#i-remove"/></svg><span>Remove</span></button></div>` : ""}</td>
+    </tr>`;
+  }).join("");
+  thunkId = null;
+
+  document.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => startEdit(b.dataset.edit)));
+  document.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", async () => {
+    if (!isAdmin) return;
+    const t = data.teams.find(x => x.id === b.dataset.del);
+    if (t && confirm("Remove " + t.name + "?")) {
+      if (editing === t.id) cancelEdit();
+      $("msg").textContent = "";
+      const { data: gone, error } = await sb.from("teams").delete().eq("id", t.id).select("id");
+      if (error || !gone || !gone.length) { $("msg").textContent = error ? dbErr(error) : "Nothing was removed. Are you still signed in as admin?"; return; }
+      await loadAll(true);
+    }
+  }));
+  markTruncated();
+
+  if (doIntro && !reduceMotion.matches) {
+    const tb = $("rows"); tb.classList.add("intro");
+    setTimeout(() => tb.classList.remove("intro"), Math.min(list.length, 14) * 45 + 600);
+  }
+  if (scrollPending && currentId) {
+    scrollPending = false;
+    requestAnimationFrame(() => {
+      const row = document.querySelector(`#rows tr[data-id="${CSS.escape(currentId)}"]`);
+      if (row) row.scrollIntoView({ block: "center", behavior: reduceMotion.matches ? "auto" : "smooth" });
+    });
+  }
+}
+
+function setEditUI(name) {
+  $("editNote").hidden = !name;
+  $("editNote").textContent = name ? "Amending file: " + name : "";
+  $("cancelEdit").hidden = !name;
+}
+function cancelEdit() {
+  editing = null; $("addBtn").textContent = "Add team"; setEditUI(null);
+  $("entryForm").reset(); $("fWrong").value = 0; $("fGive").value = 0;
+}
+
+function startEdit(id) {
+  if (!isAdmin) return;
+  const t = data.teams.find(x => x.id === id); if (!t) return;
+  editing = id;
+  $("fName").value = t.name; $("fTime").value = fmt(t.time); $("fWrong").value = t.wrong; $("fGive").value = t.give;
+  $("addBtn").textContent = "Save changes";
+  setEditUI(t.name);
+  $("fName").focus(); window.scrollTo(0, 0);
+}
+
+$("entryForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = $("msg"); msg.textContent = "";
+  if (!isAdmin) { msg.textContent = "Sign in as admin to change scores."; return; }
+  const name = $("fName").value.trim();
+  const time = parseTime($("fTime").value);
+  const wrong = parseInt($("fWrong").value, 10), give = parseInt($("fGive").value, 10);
+  if (!name) { msg.textContent = "Enter a team name."; return; }
+  if (time === null) { msg.textContent = "Time must look like 48:30 or 48."; return; }
+  if (isNaN(wrong) || wrong < 0 || isNaN(give) || give < 0) { msg.textContent = "Penalty counts must be zero or more."; return; }
+  $("addBtn").disabled = true;
+  try {
+    if (editing) {
+      const { data: rows, error } = await sb.from("teams").update({ name, time_sec: time, wrong, give }).eq("id", editing).select("id");
+      if (error) { msg.textContent = dbErr(error); return; }
+      if (!rows || !rows.length) { msg.textContent = "That team no longer exists. Cancel and add it again."; return; }
+      currentId = editing; editing = null; $("addBtn").textContent = "Add team"; setEditUI(null);
+    } else {
+      if (data.teams.some(x => x.name.toLowerCase() === name.toLowerCase())) { msg.textContent = "That team is already on the board. Use Edit to change it."; return; }
+      const { data: row, error } = await sb.from("teams").insert({ name, time_sec: time, wrong, give }).select("id").single();
+      if (error) { msg.textContent = dbErr(error); return; }
+      currentId = row.id;
+    }
+    thunkId = currentId; scrollPending = true;
+    view.q = ""; $("search").value = "";
+    await loadAll(true);
+    $("entryForm").reset(); $("fWrong").value = 0; $("fGive").value = 0; $("fName").focus({ preventScroll: true });
+  } finally { $("addBtn").disabled = false; }
+});
+$("cancelEdit").addEventListener("click", () => { cancelEdit(); $("fName").focus(); });
+
+$("penalty").addEventListener("change", async () => {
+  if (!isAdmin) return;
+  const v = parseFloat($("penalty").value);
+  const p = isNaN(v) || v < 0 ? 2 : v;
+  const { data: rows, error } = await sb.from("settings").update({ penalty: p }).eq("id", 1).select("penalty");
+  if (error || !rows || !rows.length) $("msg").textContent = error ? dbErr(error) : "Penalty was not saved. Re-run supabase-setup.sql.";
+  await loadAll(true);
+  $("penalty").value = data.penalty;
+});
+$("presentBtn").addEventListener("click", () => {
+  document.body.classList.toggle("present");
+  const on = document.body.classList.contains("present");
+  $("presentLabel").textContent = on ? "Exit presentation mode" : "Presentation mode";
+  $("presentBtn").setAttribute("aria-pressed", String(on));
+  if (on && (view.q || view.key !== "rank" || view.dir !== 1)) { view = { key: "rank", dir: 1, q: "" }; $("search").value = ""; render(); }
+  else markTruncated();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && document.body.classList.contains("present")) $("presentBtn").click();
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName);
+  if (e.key === "/" && !typing && !document.body.classList.contains("present")) { e.preventDefault(); $("search").focus(); }
+});
+$("clearBtn").addEventListener("click", async () => {
+  if (!isAdmin) return;
+  if (confirm("Clear every team from the leaderboard? This cannot be undone.")) {
+    cancelEdit(); $("msg").textContent = "";
+    const { error } = await sb.from("teams").delete().not("id", "is", null);
+    if (error) { $("msg").textContent = dbErr(error); return; }
+    await loadAll(true);
+  }
+});
+
+/* ---------- View controls ---------- */
+document.querySelector(".ledger thead").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-sort]"); if (!b) return;
+  const k = b.dataset.sort;
+  if (view.key === k) view.dir = -view.dir; else { view.key = k; view.dir = 1; }
+  render();
+});
+$("search").addEventListener("input", () => { view.q = $("search").value; render(); });
+$("search").addEventListener("keydown", (e) => { if (e.key === "Escape" && $("search").value) { e.stopPropagation(); $("search").value = ""; view.q = ""; render(); } });
+$("rows").addEventListener("click", (e) => {
+  if (e.target.closest("[data-retry]")) { retry(); return; }
+  if (e.target.closest("[data-clear]")) { $("search").value = ""; view.q = ""; render(); $("search").focus(); return; }
+  const nm = e.target.closest('.nm[role="button"]');
+  if (nm) { nm.classList.toggle("open"); nm.setAttribute("aria-expanded", String(nm.classList.contains("open"))); }
+});
+$("rows").addEventListener("keydown", (e) => {
+  const nm = e.target.closest('.nm[role="button"]');
+  if (nm && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); nm.click(); }
+});
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(markTruncated, 150); });
+
+/* ---------- Cloud data: load, live updates, admin sign-in ---------- */
+function setStatus(text) { const el = $("status"); el.textContent = text || ""; el.hidden = !text; }
+
+// Optional: open the page as scoreboard.html?you=Team%20Name to mark and scroll to that team
+function applyYou() {
+  try {
+    const you = new URLSearchParams(location.search).get("you");
+    if (you) { const t = data.teams.find(x => x.name.toLowerCase() === you.trim().toLowerCase()); if (t) { currentId = t.id; scrollPending = true; } }
+  } catch (e) { /* no query support */ }
+}
+
+async function loadAll(force) {
+  if (!sb) return;
+  let t, s;
+  try {
+    [t, s] = await Promise.all([
+      sb.from("teams").select("id,name,time_sec,wrong,give"),
+      sb.from("settings").select("penalty").eq("id", 1).maybeSingle()
+    ]);
+  } catch (e) { t = { error: { message: "Network problem. Check your internet connection." } }; s = {}; }
+  const err = t.error || s.error;
+  if (err) {
+    if (loadState === "ok") setStatus("Connection problem. Showing the last scores received; retrying…");
+    else { loadState = "error"; loadMsg = err.message || "Could not load scores."; render(); }
+    return;
+  }
+  setStatus("");
+  const teams = t.data.map(fromRow);
+  const penalty = s.data ? Number(s.data.penalty) : data.penalty;
+  const sig = JSON.stringify([penalty, teams]);
+  const first = loadState !== "ok";
+  loadState = "ok";
+  if (!first && !force && sig === lastSig) return;      // nothing changed: skip the redraw
+  lastSig = sig; data.teams = teams; data.penalty = penalty;
+  if (editing && !teams.some(x => x.id === editing)) cancelEdit();
+  if (first) applyYou();
+  render();
+}
+
+async function refreshAuth(session) {
+  let admin = false;
+  if (sb && session) {
+    const { data: ok, error } = await sb.rpc("is_admin");
+    admin = !error && ok === true;
+  }
+  const changed = admin !== isAdmin;
+  isAdmin = admin;
+  document.body.classList.toggle("is-admin", admin);
+  $("adminLabel").textContent = admin ? "Admin sign out" : "Admin sign in";
+  $("penalty").disabled = !admin;
+  if (changed) { if (!admin) { cancelEdit(); $("msg").textContent = ""; } render(); }
+  return admin;
+}
+
+$("adminBtn").addEventListener("click", async () => {
+  if (!sb) { setStatus("Add your Supabase URL and anon key at the top of the script first."); return; }
+  if (isAdmin) { await sb.auth.signOut(); return; }
+  $("loginForm").reset(); $("loginMsg").textContent = "";
+  $("loginDlg").showModal(); $("lEmail").focus();
+});
+$("loginCancel").addEventListener("click", () => $("loginDlg").close());
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const m = $("loginMsg"); m.textContent = ""; $("loginGo").disabled = true;
+  try {
+    const { data: auth, error } = await sb.auth.signInWithPassword({ email: $("lEmail").value.trim(), password: $("lPass").value });
+    if (error) { m.textContent = "Sign-in failed: " + error.message; return; }
+    if (!(await refreshAuth(auth.session))) { await sb.auth.signOut(); m.textContent = "This account is not an admin."; return; }
+    $("loginForm").reset(); $("loginDlg").close();
+  } finally { $("loginGo").disabled = false; }
+});
+
+function subscribe() {
+  let timer;
+  const queue = () => { clearTimeout(timer); timer = setTimeout(() => loadAll(), 250); };
+  sb.channel("chronos-board")
+    .on("postgres_changes", { event: "*", schema: "public", table: "teams" }, queue)
+    .on("postgres_changes", { event: "*", schema: "public", table: "settings" }, queue)
+    .subscribe();
+  // Safety net in case the live connection drops
+  setInterval(() => { if (!document.hidden) loadAll(); }, 20000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) loadAll(); });
+}
+
+function retry() { if (!sb) return; loadState = "loading"; render(); loadAll(true); }
+
+async function init() {
+  render();
+  if (!sb) {
+    loadState = "error";
+    loadMsg = configured ? "The Supabase library did not load. Check your internet connection." : "Add your Supabase URL and anon key at the top of the script.";
+    render();
+    return;
+  }
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === "INITIAL_SESSION") return;
+    setTimeout(() => refreshAuth(session), 0);          // not awaited here, to avoid a known supabase-js deadlock
+  });
+  const authDone = sb.auth.getSession().then(({ data: d }) => refreshAuth(d.session));
+  await Promise.all([loadAll(true), authDone]);
+  subscribe();
+}
+init();
+</script>
+</body>
+</html>
