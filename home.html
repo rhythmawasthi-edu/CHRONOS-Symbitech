@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project CHRONOS: The Murder of Tomorrow | Investigation Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #E9E4D8;
+    --paper-2: #DCD5C4;
+    --paper-hi: #F5F2EA;
+    --carbon: #141414;
+    --carbon-2: #1C1B19;
+    --amber: #C8892B;
+    --rust: #9B2D20;
+    --rust-lt: #D86A55;      /* oxidized red, lifted for text on carbon */
+    --teal: #3E6B6A;
+    --teal-lt: #84B3B0;      /* teal, lifted for text on carbon */
+    --ink-soft: #4A4539;     /* secondary text on paper (7.8:1) */
+    --paper-dim: #B8B1A1;    /* secondary text on carbon (9:1) */
+    --mute: #8E877A;
+    --rule: #3D3A34;
+    --doc-edge: #BDB4A0;
+
+    --head: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    --doc: "Courier Prime", "Courier New", Courier, monospace;
+
+    --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 0 0.05 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --noise-lt: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.96 0 0 0 0 0.88 0 0 0 0.7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--carbon);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 17px;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: var(--noise-lt); opacity: .06;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse 70% 50% at 18% 0%, rgba(200,137,43,.07), transparent 70%);
+  }
+  :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+  h1, h2, h3 { margin: 0; }
+  button, input { font: inherit; }
+  .sr-only {
+    position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: square; stroke-linejoin: miter; }
+
+  .wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 28px 56px; }
+
+  /* ---------- Header ---------- */
+  header.bar {
+    display: flex; flex-wrap: wrap; gap: 14px 32px; align-items: flex-end; justify-content: space-between;
+    padding: 22px 0 14px; border-bottom: 3px double #4A463E;
+  }
+  .case-no { display: block; font-size: .78rem; letter-spacing: .2em; color: var(--amber); text-transform: uppercase; margin-bottom: 4px; }
+  header.bar h1 {
+    font-family: var(--head); font-weight: 700; font-size: 2.2rem; line-height: 1;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--paper);
+  }
+  .sub-title {
+    font-family: var(--mono); font-weight: 500; font-size: .78rem; letter-spacing: .16em;
+    color: var(--paper-dim); vertical-align: middle; margin-left: 8px;
+  }
+  .stats { display: flex; flex-wrap: wrap; row-gap: 8px; font-size: .9rem; }
+  .stat { display: flex; flex-direction: column; padding: 0 14px; border-left: 1px solid var(--rule); }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat .k { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+  .stat b { font-weight: 600; color: var(--paper); font-size: 1.02rem; font-variant-numeric: tabular-nums; }
+  .stat b.hot { color: var(--amber); }
+
+  /* ---------- Current lead strip ---------- */
+  .lead {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+    padding: 12px 0 13px; margin-bottom: 30px; border-bottom: 1px solid #2C2A26;
+  }
+  .lead-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--amber); color: var(--carbon); font-weight: 600; font-size: .78rem;
+    letter-spacing: .16em; text-transform: uppercase; padding: 4px 9px;
+  }
+  .lead-label .ic { width: 15px; height: 15px; stroke-width: 2; }
+  #leadText { flex: 1 1 320px; color: var(--paper); font-size: 1rem; }
+  .steps { list-style: none; margin: 0; padding: 0; display: flex; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
+  .steps li { padding: 4px 10px; color: var(--mute); border: 1px solid var(--rule); margin-left: -1px; white-space: nowrap; }
+  .steps li .n { margin-right: 6px; }
+  .steps li.done { color: var(--teal-lt); }
+  .steps li[aria-current] { color: var(--carbon); background: var(--paper); border-color: var(--paper); font-weight: 600; }
+
+  /* ---------- Screens ---------- */
+  .screen.enter { animation: screenIn .24s ease-out; }
+  @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Paper documents ---------- */
+  .doc, .result, dialog {
+    background-color: var(--paper);
+    background-image: linear-gradient(rgba(233,228,216,.84), rgba(233,228,216,.84)), var(--noise);
+    color: var(--carbon);
+    border: 1px solid var(--doc-edge);
+    border-radius: 1px;
+    box-shadow: 3px 4px 0 rgba(0,0,0,.5);
+    position: relative;
+  }
+  .doc :focus-visible, .result :focus-visible, dialog :focus-visible { outline-color: var(--rust); }
+  .tilt-l { transform: rotate(-1deg); }
+  .tilt-r { transform: rotate(.8deg); }
+  .tilt-s { transform: rotate(-.35deg); }
+
+  .stamp {
+    display: inline-block; font-family: var(--head); font-weight: 700; text-transform: uppercase;
+    letter-spacing: .14em; font-size: .95rem; line-height: 1.2; padding: 4px 11px;
+    border: 3px solid currentColor; color: var(--rust); transform: rotate(-4deg);
+    opacity: .92; mix-blend-mode: multiply; user-select: none;
+  }
+  .stamp-teal { color: var(--teal); }
+  .stamp-in { animation: stampIn .26s cubic-bezier(.2,.7,.3,1); }
+  @keyframes stampIn { from { transform: rotate(-4deg) scale(1.4); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: .92; } }
+  .redact { display: inline-block; height: .95em; background: var(--carbon); vertical-align: -2px; }
+
+  .kicker { display: inline-block; font-size: .78rem; letter-spacing: .2em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 48px; padding: 10px 20px;
+    font-family: var(--mono); font-weight: 600; font-size: .95rem; letter-spacing: .1em; text-transform: uppercase;
+    background: var(--amber); color: var(--carbon); border: 2px solid var(--amber); border-radius: 2px;
+    box-shadow: 3px 3px 0 #000; cursor: pointer;
+    transition: background-color .12s, border-color .12s, color .12s, transform .08s, box-shadow .08s;
+  }
+  .btn .ic { width: 18px; height: 18px; stroke-width: 2; }
+  .btn:hover { background: var(--paper); border-color: var(--paper); }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+  .btn:disabled { background: transparent; color: var(--mute); border: 2px dashed #5A564D; box-shadow: none; cursor: not-allowed; transform: none; }
+  .btn.ghost { background: transparent; color: var(--paper); border-color: #6B665B; box-shadow: none; }
+  .btn.ghost:hover { border-color: var(--paper); background: rgba(233,228,216,.08); }
+  .btn.ghost:active { background: rgba(233,228,216,.14); transform: translate(1px, 1px); }
+  .doc .btn, dialog .btn { background: var(--carbon); color: var(--paper); border-color: var(--carbon); box-shadow: 3px 3px 0 rgba(20,20,20,.3); }
+  .doc .btn:hover, dialog .btn:hover { background: var(--rust); border-color: var(--rust); }
+  .doc .btn.ghost, dialog .btn.ghost { background: transparent; color: var(--carbon); border-color: var(--carbon); box-shadow: none; }
+  .doc .btn.ghost:hover, dialog .btn.ghost:hover { background: rgba(20,20,20,.08); }
+  dialog .btn.danger { background: var(--rust); border-color: var(--rust); color: var(--paper-hi); }
+  dialog .btn.danger:hover { background: var(--carbon); border-color: var(--carbon); }
+
+  /* ---------- Forms ---------- */
+  label.field {
+    display: block; font-family: var(--mono); font-weight: 600; font-size: .78rem;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px;
+  }
+  input[type=text] {
+    width: 100%; min-height: 48px; background: var(--paper-hi); color: var(--carbon);
+    border: 2px solid var(--carbon); border-radius: 0; padding: 10px 12px;
+    font-family: var(--mono); font-size: 1.05rem;
+  }
+  input[type=text]::placeholder { color: #6F695D; }
+  input[type=text]:hover { background: #FBF9F4; }
+  .msg { min-height: 1.6em; font-size: .95rem; color: var(--rust-lt); font-weight: 600; }
+  .doc .msg { color: var(--rust); }
+
+  /* ---------- Intro ---------- */
+  .intro-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .8fr); gap: 44px; align-items: start; padding-top: 3vh; }
+  .folder { padding: 40px 40px 34px; margin-top: 26px; }
+  .folder-tab {
+    position: absolute; top: -31px; left: -1px; background: var(--paper-2);
+    border: 1px solid var(--doc-edge); border-bottom: 0; padding: 5px 18px;
+    font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .doc-meta {
+    display: flex; flex-wrap: wrap; gap: 4px 24px; font-size: .78rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-soft); border-bottom: 1px solid var(--doc-edge);
+    padding-bottom: 10px; margin-bottom: 24px; padding-right: 130px;
+  }
+  .folder > .stamp { position: absolute; top: 26px; right: 26px; }
+  .folder h2 {
+    font-family: var(--head); font-weight: 700; font-size: clamp(2rem, 4.4vw, 3.1rem);
+    line-height: 1.03; text-transform: uppercase; letter-spacing: .01em; max-width: 16ch; margin-bottom: 22px;
+  }
+  .folder p { font-family: var(--doc); font-size: 1.08rem; line-height: 1.6; max-width: 58ch; margin: 0 0 14px; }
+  .intro form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-top: 28px; padding-top: 22px; border-top: 1px dashed #A69E8A; }
+  .intro form > div:first-child { flex: 1 1 260px; }
+
+  .term { background: var(--carbon-2); border: 1px solid var(--rule); position: relative; color: var(--paper); }
+  .term::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+  }
+  .term-head {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 10px 16px; border-bottom: 1px solid var(--rule);
+    font-size: .75rem; letter-spacing: .18em; text-transform: uppercase; color: var(--paper-dim);
+  }
+  .led { width: 10px; height: 10px; background: var(--rust-lt); box-shadow: 0 0 0 2px #2A2825; flex: none; }
+  .led.ok { background: var(--teal-lt); }
+
+  .roster { margin-top: 26px; }
+  .roster ol { list-style: none; margin: 0; padding: 6px 16px 14px; }
+  .roster li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 11px 0; border-bottom: 1px dashed var(--rule); }
+  .roster li:last-child { border-bottom: 0; }
+  .roster .pno { color: var(--amber); font-size: .85rem; letter-spacing: .08em; padding-top: 2px; }
+  .roster b { display: block; font-family: var(--head); font-weight: 600; font-size: 1.15rem; letter-spacing: .03em; }
+  .roster small { display: block; font-size: .85rem; color: var(--paper-dim); }
+
+  /* ---------- Diagnostic ---------- */
+  .diag { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .8fr); gap: 38px; align-items: start; }
+  .console { padding-bottom: 20px; }
+  .schematic { padding: 6px 10px 0; }
+  #schematic { display: block; width: 100%; height: auto; }
+  .mod { cursor: pointer; }
+  .mod rect.body { fill: url(#hatch); stroke: var(--rust-lt); stroke-width: 2; stroke-dasharray: 6 4; transition: stroke-width .1s; }
+  .mod text { fill: var(--paper); font-family: var(--head); font-weight: 700; font-size: 17px; letter-spacing: .03em; pointer-events: none; }
+  .mod text.sub { font-family: var(--mono); font-weight: 500; font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; fill: var(--rust-lt); }
+  .mod:hover rect.body { stroke-width: 3.5; }
+  .mod:active rect.body { stroke-width: 5; }
+  .mod.selected rect.body { stroke: var(--amber); stroke-dasharray: none; stroke-width: 3.5; }
+  .mod.selected text.sub { fill: var(--amber); }
+  .mod.online rect.body { fill: rgba(62,107,106,.38); stroke: var(--teal-lt); stroke-dasharray: none; }
+  .mod.online text.sub { fill: var(--teal-lt); }
+  .mod.online.selected rect.body { stroke: var(--amber); }
+  .mod:focus-visible { outline: none; }
+  .mod:focus-visible rect.body { stroke: var(--amber); stroke-width: 5; stroke-dasharray: none; }
+  .mod.snap rect.body { animation: snapFill .42s ease-out; }
+  @keyframes snapFill { from { fill: rgba(200,137,43,.75); stroke-width: 7; } }
+  .link { stroke: #4A463E; stroke-width: 2; stroke-dasharray: 2 6; }
+  .link.online { stroke: var(--teal-lt); stroke-dasharray: none; stroke-width: 2.5; }
+  .arc { fill: none; stroke: #2E2C28; stroke-width: 12; stroke-linecap: butt; }
+  .arc.online { stroke: var(--teal-lt); }
+  .core-title { font-family: var(--head); font-weight: 700; font-size: 22px; letter-spacing: .08em; fill: var(--amber); }
+  .core-sub { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; fill: var(--rust-lt); }
+  .core-sub.ready { fill: var(--teal-lt); }
+  .decor line, .decor circle { stroke: #3A3832; fill: none; }
+  .decor text { fill: var(--mute); font-family: var(--mono); font-size: 11px; letter-spacing: .14em; }
+
+  .list-head { margin: 10px 16px 8px; font-family: var(--mono); font-weight: 600; font-size: .75rem; letter-spacing: .18em; text-transform: uppercase; color: var(--paper-dim); }
+  .stations { list-style: none; margin: 0; padding: 0 16px; display: grid; gap: 6px; position: relative; z-index: 1; }
+  .station {
+    width: 100%; min-height: 54px; display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 12px;
+    padding: 8px 12px; background: transparent; color: var(--paper); text-align: left; cursor: pointer;
+    border: 1px solid var(--rule); border-left: 4px solid var(--rust-lt); border-radius: 0;
+    font-family: var(--mono); font-size: .95rem; transition: background-color .12s, border-color .12s;
+  }
+  .station:hover { background: rgba(233,228,216,.06); border-color: #6B665B; border-left-color: var(--rust-lt); }
+  .station:active { background: rgba(233,228,216,.13); }
+  .station.online, .station.online:hover { border-left-color: var(--teal-lt); }
+  .station[aria-pressed="true"] { border-color: var(--amber); border-left-color: var(--amber); background: rgba(200,137,43,.1); }
+  .station .nm { display: block; font-weight: 600; }
+  .station .wh { display: block; font-size: .82rem; color: var(--paper-dim); }
+  .station .st { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; padding: 2px 8px; border: 1px solid currentColor; color: var(--rust-lt); white-space: nowrap; }
+  .station.online .st { color: var(--teal-lt); }
+  .station[aria-pressed="true"] .st { color: var(--amber); }
+  .station .st.new { background: var(--amber); color: var(--carbon); border-color: var(--amber); font-weight: 600; }
+  .station.snap { animation: snapBg .45s ease-out; }
+  @keyframes snapBg { from { background: rgba(200,137,43,.45); } }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; margin-top: 18px; }
+  .console .actions { padding: 0 16px; position: relative; z-index: 1; }
+  .hint { color: var(--paper-dim); font-size: .92rem; }
+
+  .panel { min-height: 300px; padding-bottom: 24px; }
+  .doc-strip {
+    display: flex; justify-content: space-between; gap: 12px; background: var(--carbon); color: var(--paper);
+    font-size: .75rem; letter-spacing: .18em; text-transform: uppercase; padding: 8px 18px;
+  }
+  .panel-body { padding: 22px 22px 0; position: relative; }
+  .panel h2 { font-family: var(--head); font-weight: 700; font-size: 2rem; text-transform: uppercase; letter-spacing: .03em; line-height: 1.02; padding-right: 96px; }
+  .panel .who { color: var(--ink-soft); margin: 6px 0 20px; font-size: .95rem; }
+  .panel p { margin: 0 0 14px; font-size: 1rem; }
+  .panel-body > .stamp.corner { position: absolute; top: 20px; right: 18px; }
+  .panel form { display: flex; flex-direction: column; gap: 12px; }
+  .panel input[type=text] { font-size: 1.45rem; letter-spacing: .3em; text-transform: uppercase; }
+  .note { display: flex; gap: 10px; align-items: flex-start; font-size: .92rem !important; color: var(--ink-soft); border-top: 1px dashed #A69E8A; padding-top: 12px; }
+  .badge { margin: 0 0 18px; }
+  .fragment {
+    font-family: var(--doc); background: var(--paper-hi); border: 1px solid var(--doc-edge);
+    box-shadow: 2px 2px 0 rgba(20,20,20,.16); padding: 10px 14px 12px; margin: 0 0 14px;
+    transform: rotate(var(--tilt, 0deg));
+  }
+  .fragment small { display: flex; justify-content: space-between; gap: 10px; font-family: var(--mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px; }
+  .fragment small b { color: var(--rust); font-weight: 600; }
+  .fragment .ft { margin: 0; font-size: 1.07rem; line-height: 1.5; }
+  .skiphint { font-size: .82rem !important; color: var(--ink-soft); letter-spacing: .06em; }
+  .typing > span[aria-hidden]::after {
+    content: ""; display: inline-block; width: .55em; height: 1em; margin-left: 2px;
+    background: currentColor; vertical-align: -2px; animation: blink .9s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---------- Log ---------- */
+  .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 24px; }
+  .log-head h2, .verdict h2 { font-family: var(--head); font-weight: 700; font-size: clamp(1.9rem, 4vw, 2.7rem); text-transform: uppercase; letter-spacing: .03em; line-height: 1.04; }
+  .log-head p { margin: 8px 0 0; color: var(--paper-dim); max-width: 60ch; }
+  .log-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .sheet-head {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px;
+    padding: 14px 20px; border-bottom: 2px solid var(--carbon);
+    font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .sheet-head strong { color: var(--carbon); font-weight: 600; }
+  table.log { width: 100%; border-collapse: collapse; font-family: var(--doc); font-size: 1.02rem; }
+  table.log th { text-align: left; font-family: var(--mono); font-weight: 600; font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); padding: 10px 16px; border-bottom: 1px solid var(--carbon); }
+  table.log td { padding: 9px 16px; border-bottom: 1px dashed #B3AB97; vertical-align: middle; }
+  table.log tr:last-child td { border-bottom: 0; }
+  table.log td:first-child { white-space: nowrap; font-weight: 700; color: var(--rust); }
+  table.log td.src { white-space: nowrap; color: var(--ink-soft); font-family: var(--mono); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+  table.log tr:hover td { background: rgba(20,20,20,.04); }
+  table.log tr.enter td { animation: rowin .5s ease-out; }
+  @keyframes rowin { from { background: rgba(200,137,43,.38); } }
+
+  /* ---------- Verdict ---------- */
+  .verdict { max-width: 940px; }
+  .verdict > p { color: var(--paper-dim); max-width: 60ch; margin: 8px 0 26px; }
+  fieldset.doc { margin: 0 0 30px; padding: 24px 20px 18px; }
+  legend {
+    font-family: var(--head); font-weight: 700; font-size: 1.1rem; letter-spacing: .07em; text-transform: uppercase;
+    background: var(--carbon); color: var(--paper); padding: 4px 12px;
+  }
+  .suspects { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+  .opt { display: flex; gap: 12px; align-items: center; padding: 10px 12px; min-height: 48px; cursor: pointer; border: 1.5px solid transparent; transition: background-color .12s, border-color .12s; }
+  .opt input { accent-color: var(--rust); width: 20px; height: 20px; flex: none; margin: 0; cursor: pointer; }
+  .opt:hover { background: rgba(20,20,20,.05); border-color: var(--mute); }
+  .opt:active { background: rgba(20,20,20,.1); }
+  .opt:has(input:checked) { border-color: var(--carbon); background: rgba(155,45,32,.09); }
+  .opt:has(input:focus-visible) { outline: 3px solid var(--rust); outline-offset: 2px; }
+  .opt input:focus-visible { outline: none; }
+  .suspect-opt { flex-direction: column; align-items: flex-start; gap: 4px; background: var(--paper-hi); border-color: #A69E8A; padding: 12px 14px 14px; }
+  .suspect-opt .fno { font-size: .72rem; letter-spacing: .14em; color: var(--ink-soft); text-transform: uppercase; }
+  .suspect-opt .top { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .suspect-opt .sname { font-family: var(--head); font-weight: 700; font-size: 1.2rem; letter-spacing: .02em; line-height: 1.15; }
+  .opt small { color: var(--ink-soft); font-size: .85rem; }
+  .ev-opt { border-bottom: 1px dashed #B3AB97; font-family: var(--doc); font-size: 1.02rem; }
+  .ev-opt:last-child { border-bottom-color: transparent; }
+  .ev-opt .t { font-family: var(--mono); color: var(--rust); font-weight: 600; white-space: nowrap; margin-right: 6px; }
+
+  .result { padding: 26px 28px 20px; margin-top: 10px; transform: rotate(-.5deg); }
+  .result.good { border-top: 6px solid var(--teal); }
+  .result.bad { border-top: 6px solid var(--rust); }
+  .result .stamp { position: absolute; top: 22px; right: 22px; }
+  .result h3 { font-family: var(--head); font-weight: 700; font-size: 1.9rem; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 10px; padding-right: 130px; }
+  .result p { font-family: var(--doc); font-size: 1.07rem; margin: 0 0 12px; max-width: 64ch; }
+  .result p.scoreline { font-family: var(--mono); font-size: .95rem; border-top: 1px dashed #A69E8A; padding-top: 12px; margin-top: 16px; letter-spacing: .04em; }
+
+  dialog { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: calc(100vh - 32px); overflow-y: auto; max-width: 540px; width: calc(100% - 32px); padding: 0; }
+  dialog::backdrop { background: rgba(10,10,10,.8); }
+  dialog[open] { animation: screenIn .18s ease-out; }
+  dialog form { padding: 0 24px 24px; }
+  dialog .doc-strip { margin: 0 -24px 20px; }
+  dialog h3 { font-family: var(--head); font-weight: 700; font-size: 1.8rem; text-transform: uppercase; letter-spacing: .03em; }
+  dialog dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 16px 0; font-family: var(--doc); font-size: 1.05rem; }
+  dialog dt { font-family: var(--mono); font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); padding-top: 4px; }
+  dialog dd { margin: 0; font-weight: 700; }
+  dialog p { margin: 0 0 6px; }
+
+  footer { margin-top: 56px; padding-top: 14px; border-top: 1px dashed var(--rule); color: var(--mute); font-size: .82rem; letter-spacing: .04em; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    .diag, .intro-grid { grid-template-columns: 1fr; gap: 28px; }
+    .roster { margin-top: 0; }
+  }
+  @media (max-width: 700px) {
+    table.log thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    table.log, table.log tbody, table.log tr, table.log td { display: block; }
+    table.log tr { padding: 12px 14px 12px 18px; border-bottom: 1px dashed #B3AB97; }
+    table.log tr:last-child { border-bottom: 0; }
+    table.log td { padding: 0; border: 0 !important; }
+    table.log td:first-child, table.log td.src { display: inline-block; margin-right: 10px; }
+    table.log td.entry { margin: 4px 0 8px; }
+    table.log tr:hover td { background: transparent; }
+  }
+  @media (max-width: 600px) {
+    body { font-size: 16px; }
+    .wrap { padding: 0 16px 40px; }
+    header.bar h1 { font-size: 1.6rem; }
+    .sub-title { display: block; margin: 6px 0 0; font-size: .72rem; }
+    .stat { padding: 0 10px; }
+    .stat .k { font-size: .72rem; }
+    .steps li .l { display: none; }
+    .steps li[aria-current] .l { display: inline; }
+    .tilt-l { transform: rotate(-.5deg); }
+    .tilt-r { transform: rotate(.4deg); }
+    .folder { padding: 26px 20px 22px; }
+    .folder > .stamp { position: static; margin-bottom: 14px; }
+    .doc-meta { padding-right: 0; }
+    .intro form .btn, .console .actions .btn, .log-actions .btn, .verdict .actions .btn { width: 100%; }
+    .panel-body { padding: 18px 16px 0; }
+    .panel h2 { font-size: 1.7rem; }
+    .result { padding: 22px 18px 16px; }
+    .result .stamp { position: static; margin-bottom: 12px; }
+    .result h3 { padding-right: 0; }
+    .sheet-head { padding: 12px 14px; }
+    dialog .actions .btn { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- Line icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h6l2 2h10v11H3z"/><path d="M3 11h18"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2.5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-stamp" viewBox="0 0 24 24"><path d="M9 3h6v5l3 4v3H6v-3l3-4z"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></symbol>
+  <symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 6l7 6-7 6zM13 6l7 6-7 6z"/></symbol>
+</svg>
+
+<div class="wrap">
+
+  <header class="bar">
+    <div>
+      <span class="case-no">Case CHR-0317 · Night shift</span>
+      <h1>CHRONOS <span class="sub-title">// TEMPORAL INVESTIGATION TERMINAL</span></h1>
+    </div>
+    <div class="stats" id="stats" hidden>
+      <span class="stat"><span class="k">Team</span> <b id="statTeam"></b></span>
+      <span class="stat"><span class="k">Online</span> <b id="statOnline">0/5</b></span>
+      <span class="stat"><span class="k">Clues read</span> <b id="statClues">0/6</b></span>
+      <span class="stat"><span class="k">Elapsed</span> <b id="statTime">00:00</b></span>
+    </div>
+  </header>
+
+  <div class="lead">
+    <span class="lead-label"><svg class="ic" aria-hidden="true"><use href="#i-target"/></svg>Current lead</span>
+    <span id="leadText" aria-live="polite"></span>
+    <ol class="steps" id="steps" aria-label="Investigation stages">
+      <li data-step="intro"><span class="n">01</span><span class="l">Briefing</span></li>
+      <li data-step="diag"><span class="n">02</span><span class="l">Restore</span></li>
+      <li data-step="log"><span class="n">03</span><span class="l">Log</span></li>
+      <li data-step="verdict"><span class="n">04</span><span class="l">Verdict</span></li>
+    </ol>
+  </div>
+
+  <!-- Intro -->
+  <section class="screen intro" id="screenIntro">
+    <div class="intro-grid">
+      <article class="doc folder tilt-l">
+        <div class="folder-tab">File CHR-0317</div>
+        <span class="stamp" aria-hidden="true">Priority</span>
+        <div class="doc-meta"><span>Restricted</span><span>Subject: CHRONOS</span><span>Ref <span class="redact" style="width:5ch"></span></span></div>
+        <h2>CHRONOS went offline during the night shift.</h2>
+        <p>Five specialists had access. Five motives remain plausible. One command brought the future to a halt.</p>
+        <p>Investigate all five stations and collect their codes. Restore each damaged module to decrypt the night-shift log. Then compare the evidence against every suspect's statement and submit a reasoned verdict.</p>
+        <form id="introForm">
+          <div>
+            <label class="field" for="teamName">Team name</label>
+            <input type="text" id="teamName" maxlength="28" autocomplete="off" placeholder="Enter your team name" required>
+          </div>
+          <div><button class="btn" type="submit"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Start investigation</button></div>
+        </form>
+      </article>
+      <aside class="roster term" aria-labelledby="rosterHead">
+        <div class="term-head"><span id="rosterHead">Personnel with access</span><span class="led" aria-hidden="true"></span></div>
+        <ol id="roster"></ol>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Diagnostic -->
+  <section class="screen" id="screenDiag" hidden>
+    <div class="diag">
+      <div class="console term">
+        <div class="term-head"><span>Module schematic · SCH-04</span><span class="led" id="coreLed" aria-hidden="true"></span></div>
+        <div class="schematic"><svg id="schematic" viewBox="0 0 620 540" role="group" aria-label="CHRONOS module diagram"></svg></div>
+        <h3 class="list-head" id="stationHead">Station index</h3>
+        <ul class="stations" id="stationList" aria-labelledby="stationHead"></ul>
+        <div class="actions">
+          <button class="btn" id="decryptBtn" disabled><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg>Decrypt night-shift log</button>
+          <span class="hint" id="decryptHint">Restore all five modules to unlock the log.</span>
+        </div>
+      </div>
+      <aside class="panel doc tilt-r" id="panel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <!-- Log -->
+  <section class="screen" id="screenLog" hidden>
+    <div class="log-head">
+      <div>
+        <span class="kicker">Exhibit A</span>
+        <h2>RECOVERED EVENT LOG</h2>
+        <p>Recovered from CHRONOS. Compare every entry with what the suspects told you at the stations.</p>
+      </div>
+      <div class="log-actions">
+        <button class="btn ghost" id="skipLog" type="button" hidden><svg class="ic" aria-hidden="true"><use href="#i-skip"/></svg>Skip decryption</button>
+        <button class="btn" id="toVerdict" hidden><svg class="ic" aria-hidden="true"><use href="#i-stamp"/></svg>File your verdict</button>
+      </div>
+    </div>
+    <div class="sheet doc tilt-s">
+      <div class="sheet-head" aria-hidden="true">
+        <span><strong>CHRONOS event log</strong> · Night shift</span>
+        <span>Case CHR-0317 · Sheet 1 of 1 · <span class="redact" style="width:7ch"></span></span>
+      </div>
+      <div class="tablewrap">
+        <table class="log">
+          <thead><tr><th>Time</th><th>Source</th><th>Entry</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Verdict -->
+  <section class="screen verdict" id="screenVerdict" hidden>
+    <span class="kicker">Form 7-B · Statement of finding</span>
+    <h2>File your verdict</h2>
+    <p>Identify the saboteur and select the log entry that directly contradicts their statement. Suspicion is not proof.</p>
+    <form id="verdictForm">
+      <fieldset class="doc">
+        <legend>Who sabotaged CHRONOS?</legend>
+        <div id="suspectOpts" class="suspects"></div>
+      </fieldset>
+      <fieldset class="doc">
+        <legend>Which log entry contradicts their statement?</legend>
+        <div id="evidenceOpts"></div>
+      </fieldset>
+      <div class="actions">
+        <button class="btn" type="submit"><svg class="ic" aria-hidden="true"><use href="#i-stamp"/></svg>Submit verdict</button>
+        <button class="btn ghost" type="button" id="backToLog"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Back to log</button>
+        <span class="msg err" id="verdictMsg" role="alert"></span>
+      </div>
+    </form>
+    <div id="result" hidden></div>
+  </section>
+
+  <dialog id="confirmDlg" aria-labelledby="confirmTitle">
+    <form method="dialog">
+      <div class="doc-strip"><span>Final accusation</span><span>CHR-0317</span></div>
+      <h3 id="confirmTitle">File this verdict?</h3>
+      <dl>
+        <dt>Accused</dt><dd id="confirmSuspect"></dd>
+        <dt>Proof</dt><dd id="confirmEvidence"></dd>
+      </dl>
+      <p>This will be recorded as verdict #<span id="confirmCount"></span> on your team's file.</p>
+      <div class="actions">
+        <button class="btn danger" value="confirm"><svg class="ic" aria-hidden="true"><use href="#i-stamp"/></svg>Confirm accusation</button>
+        <button class="btn ghost" value="cancel" autofocus>Go back</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer>ORGANISER CONTROLS: Alt+Shift+R resets for the next team. Alt+Shift+U unlocks all modules for testing.</footer>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG: edit station codes, fragments, log and answer here.
+   Codes are not case sensitive; spaces and dashes are ignored.
+   ============================================================ */
+const CONFIG = {
+  culprit: "architect",
+  provingEntries: ["badge-in-architect", "manual-cmd"],
+  suspects: [
+    { id: "mechanist",     name: "The Mechanist",     role: "Mechanics" },
+    { id: "industrialist", name: "The Industrialist", role: "Gears and mechanisms" },
+    { id: "electrician",   name: "The Electrician",   role: "Circuits, sensors and motors" },
+    { id: "automator",     name: "The Automator",     role: "PLC and sequencing" },
+    { id: "architect",     name: "The Architect",     role: "AI" }
+  ],
+  modules: [
+    { id: "mech",  name: "Mechanics",    who: "The Mechanist",     code: "2958",
+      fragment: [["12:10 AM", "Work order WO-2291 issued: dismantle chassis module."],
+                 ["12:15 AM", "Chassis module dismantled."]] },
+    { id: "gear",  name: "Transmission", who: "The Industrialist", code: "10CW",
+      fragment: [["11:50 PM", "Gear module accessed."]] },
+    { id: "power", name: "Power",        who: "The Electrician",   code: "4471",
+      fragment: [["11:42 PM", "Power fluctuation detected. CHRONOS switched to backup power."]] },
+    { id: "auto",  name: "Automation",   who: "The Automator",     code: "0007",
+      fragment: [["12:07 AM", "Lockdown triggered by the emergency signal. No operator input recorded."]] },
+    { id: "core",  name: "AI core",      who: "The Architect",     code: "CORE",
+      fragment: [["11:58 PM", "Manual command received while in autonomous mode."]] }
+  ],
+  log: [
+    { id: "architect-out",    t: "11:30 PM", src: "Door access",  text: "Badge out: The Architect" },
+    { id: "electrician-in",   t: "11:35 PM", src: "Door access",  text: "Badge in, power room: The Electrician" },
+    { id: "breaker",          t: "11:40 PM", src: "Power room",   text: "Breaker panel opened" },
+    { id: "power-dip",        t: "11:42 PM", src: "Power",        text: "Fluctuation detected. CHRONOS on backup power, all systems stable" },
+    { id: "gear-access",      t: "11:50 PM", src: "Transmission", text: "Gear module accessed. Badge: The Industrialist" },
+    { id: "industrialist-out",t: "11:55 PM", src: "Door access",  text: "Badge out: The Industrialist" },
+    { id: "badge-in-architect",t: "11:55 PM", src: "Door access", text: "Badge in: The Architect" },
+    { id: "manual-cmd",       t: "11:58 PM", src: "Terminal 3",   text: "Manual command SUSPEND SAFETY CORE received while in autonomous mode" },
+    { id: "offline",          t: "12:03 AM", src: "CHRONOS",      text: "System offline" },
+    { id: "lockdown",         t: "12:07 AM", src: "Automation",   text: "Lockdown triggered by the emergency signal. No operator input" },
+    { id: "work-order",       t: "12:10 AM", src: "Maintenance",  text: "Work order WO-2291 issued: dismantle chassis module" },
+    { id: "mechanist-in",     t: "12:12 AM", src: "Door access",  text: "Badge in: The Mechanist" },
+    { id: "dismantled",       t: "12:15 AM", src: "Mechanics",    text: "Chassis module dismantled. Badge: The Mechanist" }
+  ],
+  explanation: "The Architect told you they left at 11:30 PM, and they did. But they badged back in at 11:55 PM and Terminal 3 received a manual command to suspend the safety core three minutes later. The power dip, the gear access, the lockdown and the chassis teardown all have explanations that do not involve switching CHRONOS off."
+};
+
+/* ============================================================
+   State
+   ============================================================ */
+const KEY = "chronos-state-v1";
+const CASE_NO = "CHR-0317";
+const $ = (id) => document.getElementById(id);
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let state = load() || { team: "", start: 0, end: 0, online: {}, attempts: 0, screen: "intro" };
+state.read = state.read || {};          // modules whose fragments have been read
+let selected = null;
+let timerHandle = null;
+let justRestored = null;
+
+function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable, keep going */ } }
+const norm = (s) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+const onlineCount = () => CONFIG.modules.filter(m => state.online[m.id]).length;
+const allOnline = () => onlineCount() === CONFIG.modules.length;
+const FRAG_TOTAL = CONFIG.modules.reduce((n, m) => n + m.fragment.length, 0);
+const readCount = () => CONFIG.modules.filter(m => state.online[m.id] && state.read[m.id]).reduce((n, m) => n + m.fragment.length, 0);
+const icon = (name) => `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+
+/* ============================================================
+   Typewriter (skippable with a click, Esc, Enter or Space)
+   ============================================================ */
+const TW = { queue: [], timer: null, fresh: false };
+function twClear() { clearTimeout(TW.timer); TW.timer = null; TW.queue = []; hideSkipHints(); }
+function twFinish() {
+  TW.queue.forEach(j => { j.out.textContent = j.text; j.el.classList.remove("typing"); });
+  twClear();
+}
+function hideSkipHints() { document.querySelectorAll(".skiphint").forEach(h => { h.hidden = true; }); }
+function typewrite(el, text, speed) {
+  el.textContent = "";
+  const sr = document.createElement("span"); sr.className = "sr-only"; sr.textContent = text;
+  const out = document.createElement("span"); out.setAttribute("aria-hidden", "true");
+  el.append(sr, out);
+  if (reduceMotion) { out.textContent = text; return; }
+  el.classList.add("typing");
+  TW.queue.push({ el, out, text, i: 0, speed: speed || 18 });
+  TW.fresh = true; setTimeout(() => { TW.fresh = false; }, 0);
+  if (!TW.timer) twStep();
+}
+function twStep() {
+  const j = TW.queue[0];
+  if (!j) { TW.timer = null; hideSkipHints(); return; }
+  j.i += 1;
+  j.out.textContent = j.text.slice(0, j.i);
+  if (j.i >= j.text.length) {
+    j.el.classList.remove("typing");
+    TW.queue.shift();
+    if (!TW.queue.length) { TW.timer = null; hideSkipHints(); return; }
+    TW.timer = setTimeout(twStep, 220);
+    return;
+  }
+  TW.timer = setTimeout(twStep, j.speed);
+}
+document.addEventListener("click", () => { if (TW.queue.length && !TW.fresh) twFinish(); });
+document.addEventListener("keydown", (e) => {
+  if (TW.queue.length && !TW.fresh && (e.key === "Escape" || e.key === "Enter" || e.key === " ")) twFinish();
+}, true);
+
+/* ============================================================
+   Schematic
+   ============================================================ */
+const SVGNS = "http://www.w3.org/2000/svg";
+const CX = 310, CY = 275, RING = 84, DIST = 205;
+const ANGLES = [-90, -18, 54, 126, 198];
+const pol = (r, deg) => [CX + r * Math.cos(deg * Math.PI / 180), CY + r * Math.sin(deg * Math.PI / 180)];
+
+function arcPath(deg) {
+  const [x1, y1] = pol(RING, deg - 30);
+  const [x2, y2] = pol(RING, deg + 30);
+  return `M${x1.toFixed(1)} ${y1.toFixed(1)} A${RING} ${RING} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+
+function buildSchematic() {
+  let s = `<defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="10" height="10" fill="rgba(155,45,32,0.12)"/><line x1="0" y1="0" x2="0" y2="10" stroke="rgba(216,106,85,0.28)" stroke-width="3"/></pattern></defs>`;
+  // Decorative registration marks, ticks and outer ring
+  let decor = `<g class="decor" aria-hidden="true">
+    <circle cx="${CX}" cy="${CY}" r="${RING + 30}" stroke-dasharray="2 5"/>
+    <text x="14" y="24">SCH-04 / REV C</text>
+    <text x="606" y="24" text-anchor="end">${CASE_NO}</text>
+    <text x="14" y="530">GRID 32</text>
+    <path d="M14 40v-8h8M606 40v-8h-8M14 506v8h8M606 506v8h-8" stroke="#3A3832" fill="none"/>`;
+  for (let d = 0; d < 360; d += 10) {
+    const major = d % 30 === 0;
+    const [x1, y1] = pol(RING + 20, d), [x2, y2] = pol(RING + (major ? 28 : 24), d);
+    decor += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke-width="${major ? 2 : 1}"/>`;
+  }
+  decor += `</g>`;
+  s += decor;
+  CONFIG.modules.forEach((m, i) => {
+    const [x, y] = pol(DIST, ANGLES[i]);
+    const [ex, ey] = pol(RING + 8, ANGLES[i]);
+    s += `<line class="link" data-link="${m.id}" x1="${ex.toFixed(1)}" y1="${ey.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+  });
+  CONFIG.modules.forEach((m, i) => { s += `<path class="arc" data-arc="${m.id}" d="${arcPath(ANGLES[i])}"/>`; });
+  s += `<circle cx="${CX}" cy="${CY}" r="${RING - 14}" fill="#141414" stroke="#C8892B" stroke-width="2"/>
+        <circle cx="${CX}" cy="${CY}" r="${RING - 20}" fill="none" stroke="#3A3832" stroke-width="1"/>
+        <text class="core-title" x="${CX}" y="${CY - 2}" text-anchor="middle">CHRONOS</text>
+        <text class="core-sub" id="coreSub" x="${CX}" y="${CY + 22}" text-anchor="middle">Offline</text>`;
+  CONFIG.modules.forEach((m, i) => {
+    const [x, y] = pol(DIST, ANGLES[i]);
+    s += `<g class="mod" data-id="${m.id}" tabindex="0" role="button" aria-label="${m.name} module">
+            <rect x="${(x - 76).toFixed(1)}" y="${(y - 31).toFixed(1)}" width="152" height="62" fill="#1C1B19"/>
+            <rect class="body" x="${(x - 76).toFixed(1)}" y="${(y - 31).toFixed(1)}" width="152" height="62" rx="1"/>
+            <text x="${x.toFixed(1)}" y="${(y - 2).toFixed(1)}" text-anchor="middle">${m.name.toUpperCase()}</text>
+            <text class="sub" data-sub="${m.id}" x="${x.toFixed(1)}" y="${(y + 19).toFixed(1)}" text-anchor="middle">Locked</text>
+          </g>`;
+  });
+  $("schematic").innerHTML = s;
+  document.querySelectorAll(".mod").forEach(g => {
+    g.addEventListener("click", () => select(g.dataset.id));
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(g.dataset.id); } });
+  });
+}
+
+function buildStations() {
+  $("stationList").innerHTML = CONFIG.modules.map(m =>
+    `<li><button type="button" class="station" data-station="${m.id}" aria-pressed="false">
+       <svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>
+       <span><span class="nm">${m.name}</span><span class="wh">${m.who}</span></span>
+       <span class="st" data-st="${m.id}">Locked</span>
+     </button></li>`).join("");
+  document.querySelectorAll(".station").forEach(b => b.addEventListener("click", () => select(b.dataset.station)));
+}
+
+function buildRoster() {
+  $("roster").innerHTML = CONFIG.suspects.map((s, i) =>
+    `<li><span class="pno">P-0${i + 1}</span><span><b>${s.name}</b><small>${s.role}</small></span></li>`).join("");
+}
+
+function paint() {
+  CONFIG.modules.forEach(m => {
+    const on = !!state.online[m.id];
+    const sel = selected === m.id;
+    const unread = on && !state.read[m.id];
+    const g = document.querySelector(`.mod[data-id="${m.id}"]`);
+    g.classList.toggle("online", on);
+    g.classList.toggle("selected", sel);
+    document.querySelector(`[data-sub="${m.id}"]`).textContent = on ? (unread ? "New clue" : "Online") : (sel ? "Enter code" : "Locked");
+    document.querySelector(`[data-link="${m.id}"]`).classList.toggle("online", on);
+    document.querySelector(`[data-arc="${m.id}"]`).classList.toggle("online", on);
+    // Station index
+    const b = document.querySelector(`.station[data-station="${m.id}"]`);
+    b.classList.toggle("online", on);
+    b.setAttribute("aria-pressed", sel ? "true" : "false");
+    b.querySelector("use").setAttribute("href", on ? "#i-check" : "#i-lock");
+    const st = b.querySelector(".st");
+    st.textContent = unread ? "New clue" : on ? "Online" : (sel ? "Enter code" : "Locked");
+    st.classList.toggle("new", unread);
+  });
+  const n = onlineCount();
+  $("statOnline").textContent = n + "/5";
+  const sub = $("coreSub");
+  sub.textContent = allOnline() ? "Ready to decrypt" : (n === 0 ? "Offline" : n + " of 5 restored");
+  sub.classList.toggle("ready", allOnline());
+  $("coreLed").classList.toggle("ok", allOnline());
+  $("decryptBtn").disabled = !allOnline();
+  $("decryptHint").textContent = allOnline() ? "All modules restored." : "Restore all five modules to unlock the log.";
+  updateStats();
+  updateLead();
+}
+
+/* ============================================================
+   Side panel
+   ============================================================ */
+function select(id) {
+  selected = id; paint(); renderPanel();
+  if (window.matchMedia("(max-width: 900px)").matches) {
+    $("panel").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }
+}
+
+function strip(m) {
+  return `<div class="doc-strip"><span>Station report</span><span>${CASE_NO}${m ? " / " + m.id.toUpperCase() : ""}</span></div>`;
+}
+
+function renderPanel() {
+  twClear();
+  const p = $("panel");
+  if (!selected) {
+    p.innerHTML = strip(null) + `<div class="panel-body"><h2>Choose a module</h2><p class="who">Five modules are down.</p>
+      <p>Select a damaged module on the diagram, then enter the code you earned at its station.</p>
+      <p class="note">${icon("key")}<span>Codes ignore capital letters, spaces and dashes.</span></p></div>`;
+    return;
+  }
+  const m = CONFIG.modules.find(x => x.id === selected);
+  if (state.online[m.id]) {
+    const firstView = !state.read[m.id];
+    state.read[m.id] = true; save();
+    const stampIn = justRestored === m.id ? " stamp-in" : "";
+    justRestored = null;
+    p.innerHTML = strip(m) + `<div class="panel-body"><h2>${m.name}</h2><p class="who">Station of ${m.who}</p>
+      <span class="badge stamp stamp-teal${stampIn}">Module online</span>
+      <p>Recovered log fragment:</p>` +
+      m.fragment.map((f, i) => `<div class="fragment" style="--tilt:${i % 2 ? 1.1 : -0.9}deg">
+          <small><b>${f[0]}</b><span>Frag ${i + 1}/${m.fragment.length}</span></small>
+          <p class="ft" data-frag="${i}"></p></div>`).join("") +
+      (firstView && !reduceMotion ? `<p class="skiphint">Click anywhere or press Esc to skip.</p>` : "") +
+      `</div>`;
+    m.fragment.forEach((f, i) => {
+      const el = p.querySelector(`[data-frag="${i}"]`);
+      if (firstView) typewrite(el, f[1], 20); else el.textContent = f[1];
+    });
+    paint();
+    return;
+  }
+  p.innerHTML = strip(m) + `<div class="panel-body"><span class="stamp corner" aria-hidden="true">Damaged</span>
+    <h2>${m.name}</h2><p class="who">Station of ${m.who}</p>
+    <form id="codeForm" autocomplete="off">
+      <label class="field" for="codeInput">Station code</label>
+      <input type="text" id="codeInput" maxlength="12" spellcheck="false" required>
+      <button class="btn" type="submit">${icon("key")}Restore module</button>
+      <div class="msg" id="codeMsg" role="alert"></div>
+    </form></div>`;
+  $("codeInput").focus();
+  $("codeForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (norm($("codeInput").value) === norm(m.code)) {
+      state.online[m.id] = true; save();
+      justRestored = m.id;
+      paint(); renderPanel();
+      snap(document.querySelector(`.mod[data-id="${m.id}"]`));
+      snap(document.querySelector(`.station[data-station="${m.id}"]`));
+    } else {
+      const msg = $("codeMsg");
+      msg.className = "msg err";
+      msg.textContent = "Code rejected. Recheck your station result and try again.";
+      $("codeInput").select();
+    }
+  });
+}
+
+function snap(el) {
+  if (!el || reduceMotion) return;
+  el.classList.remove("snap"); void el.getBoundingClientRect(); el.classList.add("snap");
+  setTimeout(() => el.classList.remove("snap"), 500);
+}
+
+/* ============================================================
+   Lead, progress and stage indicator
+   ============================================================ */
+const ORDER = ["intro", "diag", "log", "verdict"];
+function updateStats() {
+  $("statClues").textContent = readCount() + "/" + FRAG_TOTAL;
+  $("statOnline").classList.toggle("hot", allOnline());
+}
+function updateLead() {
+  const s = state.screen;
+  let t = "";
+  if (s === "intro") t = "Register your team to open the case file.";
+  else if (s === "diag") {
+    const n = onlineCount();
+    if (n < CONFIG.modules.length) {
+      const next = CONFIG.modules.find(m => !state.online[m.id]);
+      t = `Restore the damaged modules (${n}/5). Next: select ${next.name} and enter the code from ${next.who}'s station.`;
+    } else t = "All five modules restored. Decrypt the night-shift log.";
+  } else if (s === "log") {
+    t = $("toVerdict").hidden
+      ? "Decrypting the night-shift log. Entries are arriving."
+      : "Compare each entry with what the suspects told you, then file your verdict.";
+  } else if (s === "verdict") {
+    t = state.end ? "Case closed. Hand the terminal to the organiser." : "Name the saboteur and the one entry that contradicts their statement.";
+  }
+  $("leadText").textContent = t;
+  const c = ORDER.indexOf(s);
+  document.querySelectorAll("#steps li").forEach(li => {
+    const i = ORDER.indexOf(li.dataset.step);
+    if (i === c) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+    li.classList.toggle("done", i < c || (!!state.end && i === c));
+  });
+}
+
+/* ============================================================
+   Screens
+   ============================================================ */
+function show(name) {
+  twClear();
+  state.screen = name; save();
+  let shown = null;
+  ["Intro", "Diag", "Log", "Verdict"].forEach(n => {
+    const el = $("screen" + n);
+    el.hidden = (n.toLowerCase() !== name);
+    if (!el.hidden) shown = el;
+  });
+  $("stats").hidden = (name === "intro");
+  $("statTeam").textContent = state.team;
+  if (name === "diag") { paint(); renderPanel(); }
+  if (name === "log") revealLog();
+  if (name === "verdict") buildVerdict();
+  if (shown && !reduceMotion) { shown.classList.remove("enter"); void shown.offsetWidth; shown.classList.add("enter"); }
+  updateStats(); updateLead();
+  window.scrollTo(0, 0);
+}
+
+$("introForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  state.team = $("teamName").value.trim();
+  state.start = Date.now(); state.end = 0; state.attempts = 0; state.online = {};
+  state.read = {};
+  show("diag"); startTimer();
+});
+$("decryptBtn").addEventListener("click", () => show("log"));
+$("toVerdict").addEventListener("click", () => show("verdict"));
+$("backToLog").addEventListener("click", () => show("log"));
+
+/* ---------- Log reveal ---------- */
+let logShown = false;
+let logTimers = [];
+function addLogRow(row) {
+  const tr = document.createElement("tr");
+  tr.className = "enter";
+  tr.dataset.id = row.id;
+  tr.innerHTML = `<td>${row.t}</td><td class="src">${row.src}</td><td class="entry">${row.text}</td>`;
+  $("logBody").appendChild(tr);
+}
+function finishReveal() {
+  logTimers.forEach(clearTimeout); logTimers = [];
+  $("skipLog").hidden = true;
+  $("toVerdict").hidden = false;
+  updateLead();
+}
+function revealLog() {
+  const body = $("logBody");
+  if (logShown) { $("toVerdict").hidden = false; updateLead(); return; }
+  logShown = true;
+  body.innerHTML = "";
+  $("toVerdict").hidden = true;
+  if (reduceMotion || state.end) {
+    CONFIG.log.forEach(addLogRow); finishReveal(); return;
+  }
+  $("skipLog").hidden = false;
+  CONFIG.log.forEach((row, i) => logTimers.push(setTimeout(() => {
+    addLogRow(row);
+    if (i === CONFIG.log.length - 1) finishReveal();
+  }, 450 * (i + 1))));
+}
+$("skipLog").addEventListener("click", () => {
+  logTimers.forEach(clearTimeout); logTimers = [];
+  const have = $("logBody").children.length;
+  CONFIG.log.slice(have).forEach(addLogRow);
+  finishReveal();
+  $("toVerdict").focus();
+});
+
+/* ---------- Verdict ---------- */
+function buildVerdict() {
+  $("suspectOpts").innerHTML = CONFIG.suspects.map((s, i) =>
+    `<label class="opt suspect-opt"><span class="top"><input type="radio" name="suspect" value="${s.id}" required><span class="fno">File P-0${i + 1}</span></span><span class="sname">${s.name}</span> <small>${s.role}</small></label>`).join("");
+  $("evidenceOpts").innerHTML = CONFIG.log.map(r =>
+    `<label class="opt ev-opt"><input type="radio" name="evidence" value="${r.id}" required><span><span class="t">${r.t}</span> ${r.text}</span></label>`).join("");
+  $("verdictMsg").textContent = "";
+}
+
+$("verdictForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const suspect = document.querySelector('input[name="suspect"]:checked');
+  const evidence = document.querySelector('input[name="evidence"]:checked');
+  if (!suspect || !evidence) { $("verdictMsg").textContent = "Choose a suspect and a log entry."; return; }
+  $("verdictMsg").textContent = "";
+  askConfirm(suspect.value, evidence.value);
+});
+
+function askConfirm(sid, eid) {
+  const s = CONFIG.suspects.find(x => x.id === sid);
+  const r = CONFIG.log.find(x => x.id === eid);
+  const dlg = $("confirmDlg");
+  if (typeof dlg.showModal !== "function") {
+    if (confirm(`Accuse ${s.name}, citing ${r.t}: ${r.text}?`)) judge(sid, eid);
+    return;
+  }
+  $("confirmSuspect").textContent = s.name;
+  $("confirmEvidence").textContent = `${r.t}  ${r.text}`;
+  $("confirmCount").textContent = state.attempts + 1;
+  dlg.returnValue = "";
+  dlg.showModal();
+}
+$("confirmDlg").addEventListener("close", () => {
+  const ok = $("confirmDlg").returnValue === "confirm";
+  const suspect = document.querySelector('input[name="suspect"]:checked');
+  const evidence = document.querySelector('input[name="evidence"]:checked');
+  if (ok && suspect && evidence) judge(suspect.value, evidence.value);
+  else document.querySelector('#verdictForm button[type="submit"]').focus();
+});
+
+function judge(suspectId, evidenceId) {
+  state.attempts += 1;
+  const res = $("result");
+  res.hidden = false;
+  const rightSuspect = suspectId === CONFIG.culprit;
+  const rightEvidence = CONFIG.provingEntries.includes(evidenceId);
+  const stamp = (txt, cls) => `<span class="stamp ${cls}${reduceMotion ? "" : " stamp-in"}" aria-hidden="true">${txt}</span>`;
+  if (rightSuspect && rightEvidence) {
+    state.end = state.end || Date.now(); save(); stopTimer();
+    res.className = "result good";
+    res.innerHTML = `${stamp("Solved", "stamp-teal")}<h3>Case closed</h3><p class="tw"></p>
+      <p class="scoreline">Team ${esc(state.team)} | Time ${fmt(state.end - state.start)} | Verdicts filed: ${state.attempts}</p>`;
+    typewrite(res.querySelector(".tw"), CONFIG.explanation, 12);
+    $("verdictForm").hidden = true;
+  } else if (rightSuspect) {
+    save();
+    res.className = "result bad";
+    res.innerHTML = `${stamp("Insufficient", "")}<h3>Right suspect, wrong proof</h3><p class="tw"></p>
+      <p class="scoreline">Verdicts filed: ${state.attempts}</p>`;
+    typewrite(res.querySelector(".tw"), "That entry does not contradict their statement. Reread what they said and find the entry that does.", 14);
+  } else {
+    save();
+    res.className = "result bad";
+    res.innerHTML = `${stamp("Rejected", "")}<h3>Verdict rejected</h3><p class="tw"></p>
+      <p class="scoreline">Verdicts filed: ${state.attempts}</p>`;
+    typewrite(res.querySelector(".tw"), "The log does not contradict this suspect's statement. Compare each statement with the log again.", 14);
+  }
+  updateLead();
+  res.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+}
+
+/* ============================================================
+   Timer and helpers
+   ============================================================ */
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fmt(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
+}
+function tick() { $("statTime").textContent = fmt((state.end || Date.now()) - state.start); }
+function startTimer() { stopTimer(); tick(); if (!state.end) timerHandle = setInterval(tick, 1000); }
+function stopTimer() { if (timerHandle) clearInterval(timerHandle); timerHandle = null; tick(); }
+
+document.addEventListener("keydown", (e) => {
+  if (!(e.altKey && e.shiftKey)) return;
+  if (e.code === "KeyR") {
+    if (confirm("Reset CHRONOS for the next team?")) { try { localStorage.removeItem(KEY); } catch (err) {} location.reload(); }
+  }
+  if (e.code === "KeyU") {
+    CONFIG.modules.forEach(m => state.online[m.id] = true); save();
+    if (state.screen === "diag") { paint(); renderPanel(); }
+  }
+});
+
+/* ============================================================
+   Boot
+   ============================================================ */
+buildSchematic();
+buildStations();
+buildRoster();
+if (state.screen !== "intro" && state.team) {
+  show(state.screen);
+  startTimer();
+} else {
+  show("intro");
+}
+</script>
+</body>
+</html>
